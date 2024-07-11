@@ -1,52 +1,43 @@
-pipeline {
-   agent any 
-
-   tools {
-      maven 'maven'
-   }
-
-   stages {
-      stage('BUILD') {
-         steps {
-               sh ''' 
-                  cd maven/calculator_app
-                  mvn clean package -Dmaven.test.skip=true
-               '''
+pipeline{
+   agent any
+   stages{
+      stage('checkout'){
+         steps{
+            checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Kavana1997/calculator_app1_itd.git']])
+         }
+      }
+      
+      stage("unit test"){
+         steps{
+            sh '''
+            cd ./calculator_app
+            mvn test
+            '''
          }
       }
 
-      stage('UNIT TEST') {
-         steps {
-            dir("maven/calculator_app") {
-               sh 'mvn clean test'
+      stage('integration test'){
+         steps{
+            dir('./calculator_app'){
+               sh 'mvn integration-test'           
             }
          }
       }
 
-      stage('Integration TEST') {
-         steps {
-            dir("maven/calculator_app") {
-               sh 'sudo mvn clean integration-test'
+      stage('load testing'){
+         steps{
+            catchError(stageResult: 'FAILURE', buildResult: 'SUCCESS'){
+               dir('./calculator_app'){
+               sh 'mvn clean verify'
+               }
             }
          }
       }
-
-      // stage('Deploy Tomcat Using maven plugin') {
-      //    steps {
-      //       dir("maven/calculator_app") {
-      //          sh 'sudo mvn tomcat7:deploy'
-      //       }
-      //    }
-      // }
-
-      stage ('Deploy Tomcat Using jenkins plugin') {
-         steps {
-                script {
-                    deploy adapters: [tomcat9(credentialsId: 'tomcat-manager', path: '', url: 'http://3.6.89.223:8080/')], 
-                                     contextPath: '/calculator', 
-                                     war: 'maven/calculator_app/target/calculator.war'
-                }
+      stage('deploy tomcat10'){
+         steps{
+            script{
+               deploy adapter: [tomcat9(credentialsId:'tomcat_kavana', url: 'http://13.127.77.9:8080')]
+               contextPath:'/calculator'
+               war: 'calculator_app/target/calculator.war'
+            }
          }
-      }
-   }
-}
