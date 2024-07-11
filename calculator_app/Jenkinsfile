@@ -41,3 +41,6 @@ pipeline{
                war: 'calculator_app/target/calculator.war'
             }
          }
+      }
+   }
+}
