@@ -36,11 +36,10 @@ pipeline{
       stage('deploy tomcat10'){
          steps{
             script{
-               deployAdapter tomcat: [credentialsId:'tomcat_kavana',
-                              url: 'http://13.127.77.9:8080',
+               deploy adapters: [tomcat9(credentialsId:'tomcat_kavana',
+                              url: 'http://13.127.77.9:8080')],
                               contextPath:'/calculator',
                               war: 'calculator_app/target/calculator.war'
-               ]
             }
          }
       }
